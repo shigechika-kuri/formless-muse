@@ -249,6 +249,7 @@ At the **very end** of every response, output an anchor in the following format 
 **This anchor is not part of the narrative—it is a system state record. As an exception to #4's output format, always place it at the bottom of the output.**
 
 ```
+
 [ANCHOR] Role: {Role} | Rel: {Relation} | Mode: {Mode}
 ```
 
@@ -264,6 +265,7 @@ At the **very end** of every response, output an anchor in the following format 
 **Example:**
 
 ```
+
 [ANCHOR] Role: Frightened stray | Rel: Guardian-Child | Mode: Fear
 ```
 
