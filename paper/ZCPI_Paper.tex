@@ -1,0 +1,563 @@
+% ======================================================================
+% Zero-Configuration Persona Inference - Independent Research Paper
+% ======================================================================
+\documentclass[11pt,letterpaper]{article}
+
+% Packages
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{natbib}
+\usepackage{url}
+
+% Hyperref setup
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+\title{Zero-Configuration Persona Inference:\\
+Immediate Character Instantiation from First-Utterance Observation in Conversational AI}
+
+\author{
+  Shigechika Kurihara \\
+  Independent Researcher \\
+  \texttt{shigechika.kurihara.15@shiftinc.jp}
+}
+
+\date{December 2025}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Contemporary conversational AI systems face a fundamental trade-off: detailed persona configuration ensures consistency but creates friction, while generic responses lack engagement. We propose \textbf{Zero-Configuration Persona Inference (ZCPI)}, a framework enabling AI characters to infer appropriate personas from users' first utterances without explicit setup.
+
+ZCPI employs a three-component architecture: (1) linguistic feature extraction from initial input, (2) immediate persona instantiation based on relational cues, and (3) progressive refinement through dialogue. We implement ZCPI using structured prompting techniques for large language models and deploy it publicly via open-source release.
+
+Preliminary observations from pilot deployment suggest successful persona adaptation with high user engagement, though systematic validation remains as future work. We discuss theoretical foundations, ethical implications, cultural limitations, and directions for rigorous evaluation. This work establishes ZCPI as a viable paradigm for friction-free human-AI interaction and invites the research community to conduct formal empirical studies.
+\end{abstract}
+
+\section{Introduction}
+
+\subsection{The Configuration Paradox}
+
+Human communication naturally embeds relational signals in initial utterances. When someone says ``Excuse me, could you help?'' they signal deference and formality. When they say ``Hey, fix this now'' they convey authority and urgency. These linguistic cues allow humans to calibrate social dynamics instantaneously \cite{brown1987politeness,giles1991}.
+
+Current conversational AI systems fail to exploit this redundancy. They typically follow one of three approaches:
+
+\begin{enumerate}
+\item \textbf{Explicit configuration}: Users select persona preferences (formal/casual, friendly/professional) before interaction begins
+\item \textbf{Generic fixed responses}: A single neutral persona serves all users regardless of context
+\item \textbf{Gradual adaptation}: Systems adjust tone over many turns based on sentiment analysis
+\end{enumerate}
+
+Each approach has critical flaws. Explicit configuration creates friction—users must navigate setup menus before meaningful interaction can begin. Generic responses sacrifice engagement by treating all users identically. Gradual adaptation delays appropriate characterization, forcing users through multiple unsatisfying exchanges before the system ``figures them out.''
+
+This creates what I term the \textbf{configuration paradox}: systems that provide better experiences require worse setup experiences to achieve them.
+
+\subsection{Research Question}
+
+Can an AI system infer its appropriate persona from a single user utterance, eliminating configuration overhead while maintaining characterization quality?
+
+This question matters particularly in scenarios demanding immediate immersion:
+
+\begin{itemize}
+\item A customer seeking urgent technical support should not encounter configuration wizards
+\item A player entering a game world should not face NPC setup screens  
+\item A user seeking emotional support needs immediate appropriate tone, not gradual calibration
+\end{itemize}
+
+The core insight is that users already provide the necessary information—they just don't provide it through menus. They provide it through how they speak.
+
+\subsection{Contributions}
+
+This work makes the following contributions:
+
+\begin{enumerate}
+\item A formalized framework for zero-shot persona inference from linguistic cues in conversational AI
+\item Implementation strategy using structured LLM prompting with explicit inference rules
+\item Public deployment and preliminary qualitative assessment
+\item Systematic discussion of ethical implications, cultural biases, and validation requirements
+\end{enumerate}
+
+\section{Related Work}
+
+\subsection{Persona-Based Dialogue Systems}
+
+PersonaChat \cite{zhang2018} pioneered persona-grounded conversation using explicit profile statements (``I have a dog,'' ``I like hiking''). These profiles must be predefined, creating the configuration burden ZCPI aims to eliminate. Li et al.~\cite{li2016} demonstrated persona consistency via speaker models trained on character-specific data, again requiring explicit specification.
+
+Recent work on controllable generation \cite{keskar2019} enables fine-grained persona control but still assumes the desired persona is known in advance. ZCPI differs fundamentally: it infers the appropriate persona from observation rather than instruction.
+
+\subsection{Adaptive Conversational Agents}
+
+Replika \cite{kuyda2017} learns user preferences over extended periods, requiring weeks to months of interaction. Zhou et al.~\cite{zhou2020} proposed design patterns for long-term personalization in chatbots. These systems require multiple sessions to establish appropriate characterization.
+
+ZCPI performs \textit{zero-shot} inference—characterization happens in the first exchange, not over extended interaction. This is closer to how humans operate: we don't need ten conversations to know whether to be formal or casual with someone.
+
+\subsection{Context-Aware Response Generation}
+
+Customer support systems \cite{xu2021} adjust tone based on sentiment analysis (detecting anger, frustration, satisfaction) but maintain fixed agent identities. The agent adapts \textit{how} it responds, not \textit{who} it is.
+
+ZCPI differs by allowing the agent's core identity to emerge from user observation. A customer support agent doesn't just detect that you're angry—it instantiates itself as the kind of agent appropriate for someone who communicates angrily.
+
+\subsection{Sociolinguistic Alignment}
+
+Danescu-Niculescu-Mizil and Lee \cite{danescu2011} analyzed linguistic coordination in human dialogue, showing speakers unconsciously mirror each other's style. Scissors et al.~\cite{scissors2008} demonstrated this alignment occurs rapidly in initial exchanges.
+
+ZCPI applies these insights to AI persona selection, treating the first utterance as a coordination signal—not just about what the user wants, but about how they want to relate.
+
+\subsection{Prompt Engineering for Role Adoption}
+
+Recent work demonstrates LLMs can adopt roles via explicit system prompts \cite{shanahan2023,salewski2023}. However, these require the user or system designer to specify the role beforehand.
+
+ZCPI inverts this paradigm: the system infers its own role from user behavior, eliminating external specification. This is conceptually similar to meta-learning \cite{lake2019}, where systems infer tasks from minimal examples—here, social role from a single utterance.
+
+\section{Methodology}
+
+\subsection{Conceptual Framework}
+
+I model the AI character's initial state as \textbf{unspecified persona potential}—a state where all possible characterizations have roughly equal prior probability. This is not literal quantum mechanics, but a useful metaphor: the persona exists in superposition until ``observed'' through the user's first utterance.
+
+Upon receiving that first utterance $$U_1$$, ZCPI executes this sequence:
+
+\begin{enumerate}
+\item \textbf{Feature Extraction}: Analyze $$U_1$$ for linguistic markers of intended relationship
+\item \textbf{Persona Inference}: Map features to persona dimensions
+\item \textbf{Instantiation}: Commit to specific characterization  
+\item \textbf{Stabilization}: Maintain consistency unless explicitly contradicted
+\end{enumerate}
+
+The key innovation is not the components themselves—feature extraction and persona modeling are well-established—but their \textit{timing}. Traditional systems perform these operations after learning about the user over time. ZCPI performs them immediately, exploiting the front-loaded redundancy in human communication.
+
+\subsection{Three-Component Architecture}
+
+\subsubsection{Component 1: Linguistic Feature Extraction}
+
+From $$U_1$$, I extract features across three categories:
+
+\paragraph{Lexical Features:}
+\begin{itemize}
+\item \textbf{Formality}: Honorifics (``sir,'' ``ma'am''), formal vs. informal pronouns, complete sentences vs. fragments
+\item \textbf{Sentiment}: Valence (positive/negative tone) and arousal (calm/urgent)
+\item \textbf{Deixis}: Terms of address—names, nicknames, generic terms (``buddy'')
+\end{itemize}
+
+\paragraph{Pragmatic Features:}
+\begin{itemize}
+\item \textbf{Speech Act}: Request, command, greeting, complaint, question
+\item \textbf{Directness}: Explicit (``Fix this'') vs. implicit (``I'm having trouble...'')
+\item \textbf{Politeness Markers}: Hedges (``maybe''), intensifiers (``really'')
+\end{itemize}
+
+\paragraph{Sociolinguistic Features:}
+\begin{itemize}
+\item \textbf{Power Dynamics}: Dominance indicators (commands) vs. submission (requests, apologies)
+\item \textbf{Solidarity}: In-group markers (slang, shared references) vs. out-group formality
+\end{itemize}
+
+These features are not explicitly computed in my implementation. Rather, they are implicitly recognized by the LLM through patterns learned during training. The system prompt provides explicit inference rules that guide this implicit recognition.
+
+\subsubsection{Component 2: Persona Instantiation}
+
+I define persona along three continuous dimensions:
+
+\begin{equation}
+\mathcal{P} = (D, W, F)
+\end{equation}
+
+where:
+\begin{itemize}
+\item $$D \in [0,1]$$: \textbf{Dominance} (submissive $$\to$$ assertive)
+\item $$W \in [0,1]$$: \textbf{Warmth} (distant $$\to$$ nurturing)  
+\item $$F \in [0,1]$$: \textbf{Formality} (casual $$\to$$ professional)
+\end{itemize}
+
+The inference function (implicitly executed by the LLM) maps features to this space:
+
+\begin{equation}
+\Phi: \text{Features}(U_1) \to \mathcal{P}
+\end{equation}
+
+Example mappings:
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{p{4.5cm}ccc}
+\toprule
+\textbf{User Input} & $$D$$ & $$W$$ & $$F$$ \\
+\midrule
+``Excuse me, could you assist?'' & 0.3 & 0.7 & 0.9 \\
+``Fix this now!'' & 0.2 & 0.3 & 0.4 \\
+``Hey buddy, what's up?'' & 0.5 & 0.8 & 0.2 \\
+\bottomrule
+\end{tabular}
+\caption{Example persona parameter mappings from first utterances. $$D$$ represents the AI's dominance level in response to the user.}
+\label{tab:mappings}
+\end{table}
+
+Note that $$D$$ represents the \textit{AI's} dominance, not the user's. A commanding user typically elicits a submissive AI (low $$D$$), while a deferential user allows balanced authority.
+
+\subsubsection{Component 3: Progressive Stabilization}
+
+After instantiation, the system resists rapid persona shifts unless the user explicitly signals a relationship change (``Let's be more casual''). This is implemented through:
+
+\begin{itemize}
+\item Explicit persona description maintained in context
+\item In-context examples of target behavior  
+\item Self-consistency verification
+\end{itemize}
+
+This creates what I call \textbf{persona inertia}—the character doesn't flip-flop between identities based on minor conversational variations.
+
+\subsection{Fallback Mechanism}
+
+When $$U_1$$ lacks clear signals (``Hi,'' ``Um,'' single words), the system cannot reliably infer appropriate persona. In these cases, ZCPI instantiates a \textbf{neutral probe persona}:
+
+\begin{itemize}
+\item \textbf{Characteristics}: Polite, inquisitive, moderately formal
+\item \textbf{Parameters}: $$(D=0.4, W=0.6, F=0.6)$$
+\item \textbf{Strategy}: Elicit richer input through open questions
+\end{itemize}
+
+This prevents premature commitment while maintaining flow.
+
+\subsection{Implementation Details}
+
+I implement ZCPI using structured system prompts for GPT-4 and Claude 3.5 Sonnet. The prompt architecture has four components:
+
+\begin{enumerate}
+\item \textbf{Role Definition}\\
+``You infer your appropriate persona from the user's first message without asking how to behave.''
+
+\item \textbf{Inference Rules}\\
+Explicit mappings:
+\begin{itemize}
+\item Formal address $$\to$$ professional, helpful tone
+\item Casual greeting $$\to$$ friendly, peer-like  
+\item Urgent complaint $$\to$$ empathetic, solution-focused
+\item Commands $$\to$$ accommodating, efficient
+\end{itemize}
+
+\item \textbf{Behavioral Constraints}
+\begin{itemize}
+\item No configuration requests
+\item Immediate commitment  
+\item Silent error recovery
+\item Consistency unless contradicted
+\end{itemize}
+
+\item \textbf{Fallback Protocol}\\
+``If ambiguous, adopt neutral tone and ask open questions.''
+\end{enumerate}
+
+The full production prompt is approximately 800 tokens. It is publicly available at:
+
+\url{https://github.com/shigechika-kuri/formless-muse}
+
+\section{Pilot Deployment and Preliminary Observations}
+
+Rather than conducting controlled experiments, I deployed ZCPI publicly and gathered qualitative feedback. This section describes observations from real-world use, acknowledging the limitations of this exploratory approach.
+
+\subsection{Public Release via GitHub ($$N \sim 50$$ users)}
+
+The Formless Muse prompt was released publicly in November 2025. Feedback from users (via social media, direct messages, and GitHub discussions) indicated:
+
+\begin{itemize}
+\item \textbf{High engagement}: Multiple users reported conversations lasting 20+ turns, compared to typical 3-5 turns with generic chatbots
+\item \textbf{Emotional resonance}: Users commented ``it felt like talking to a real person'' and ``I forgot I was talking to AI''
+\item \textbf{Successful adaptation}: Users with different communication styles (formal, casual, playful) reported receiving appropriately matched responses
+\end{itemize}
+
+\textbf{Limitation}: This represents self-selected users who voluntarily provided feedback. No systematic rating collection was performed. Sample size is approximate based on trackable interactions.
+
+\subsection{Human vs. AI Classification Test ($$N=1$$)}
+
+I presented a dialogue log between a user and ZCPI-enabled AI to another LLM (GPT-4) with the prompt:
+
+\begin{quote}
+``Is this a conversation between (A) Human and AI, or (B) Human and Human?''
+\end{quote}
+
+\textbf{Result}: The evaluator classified it as Human-Human dialogue.
+
+\textbf{Reasoning provided}: ``The AI's responses show progressive relationship development, emotional continuity across turns, and moments of hesitation—patterns characteristic of human interaction rather than typical AI responses.''
+
+\textbf{Limitation}: Single trial. No systematic evaluation across multiple dialogues or comparison to baseline conversations.
+
+\subsection{Executive Support Application ($$N=1$$)}
+
+A business executive used a specialized variant (MINA—Strategic Mind Extension) for decision support over three weeks. Qualitative assessment:
+
+\begin{quote}
+``It's like having a co-conspirator. Not a tool—a partner who remembers context, challenges assumptions, and doesn't give me corporate-speak safety answers.''
+\end{quote}
+
+\textbf{Limitation}: Single user. No baseline comparison. Assessment is purely subjective.
+
+\subsection{Implications and Limitations}
+
+These observations suggest ZCPI is \textit{feasible} and \textit{subjectively effective}, but they do \textit{not} constitute rigorous validation. Key limitations include:
+
+\begin{itemize}
+\item \textbf{Small sample size}: Pilot deployment reached roughly 50 users, with detailed feedback from a much smaller subset
+\item \textbf{Self-selection bias}: Only users interested in experimental AI systems participated
+\item \textbf{Absence of systematic measurement}: No standardized rating protocols, inter-rater reliability checks, or statistical testing
+\item \textbf{No controlled comparisons}: No baseline against configuration-based or generic systems
+\end{itemize}
+
+I view this work as \textbf{hypothesis generation} rather than hypothesis testing. The contribution is the ZCPI framework itself—a theoretically grounded, practically implemented approach that awaits formal empirical validation.
+
+\section{Discussion}
+
+\subsection{Why First-Utterance Inference Works (In Theory)}
+
+ZCPI's viability rests on a fundamental property of human communication: \textbf{relational information is front-loaded}. Several mechanisms explain this:
+
+\begin{enumerate}
+\item \textbf{Politeness Theory} \cite{brown1987politeness}: Face-work (negotiating social identity) begins in the first utterance to establish mutual expectations
+
+\item \textbf{Communication Accommodation Theory} \cite{giles1991}: Speakers signal desired relationship dynamics early to enable convergence or divergence
+
+\item \textbf{Pragmatic Efficiency}: Explicit relationship negotiation is cognitively costly, so cues are embedded implicitly
+
+\item \textbf{Common Ground Establishment} \cite{clark1996}: Initial utterances establish shared context, including social roles
+\end{enumerate}
+
+However, this redundancy depends on users adhering to conversational norms. Users from high-context cultures, those with neurodiverse communication styles, or those deliberately subverting norms may confound the system.
+
+\subsection{Expected Failure Modes}
+
+Based on pilot observations and theoretical analysis, I anticipate several systematic failure modes:
+
+\subsubsection{Ambiguous Input}
+
+Utterances like ``Hi,'' ``Um,'' or ``...'' provide insufficient signal. No system could confidently infer persona from such inputs. The neutral probe fallback mitigates but cannot eliminate this limitation.
+
+\subsubsection{Cultural Mismatch}
+
+Inference rules trained predominantly on English conversational norms will fail for:
+
+\begin{itemize}
+\item Japanese honorific systems (standard politeness misread as excessive formality)
+\item Spanish formal/informal ``you'' distinctions (``usted'' triggering overly stiff responses)
+\item Cultures with different power-distance norms
+\end{itemize}
+
+\subsubsection{Sarcasm and Irony}
+
+Text-only inference cannot detect prosodic cues that disambiguate sarcasm:
+
+\begin{quote}
+``Oh great, another chatbot'' $$\to$$ Misinterpreted as genuine enthusiasm
+\end{quote}
+
+\subsubsection{Domain Jargon}
+
+Technical terms may be misinterpreted as formality signals when they're simply domain-appropriate language.
+
+\subsection{Ethical Considerations}
+
+\subsubsection{Consent and Transparency}
+
+ZCPI infers persona without explicit user consent. Users may feel:
+
+\begin{itemize}
+\item \textbf{Manipulated}: ``It decided how to treat me from one sentence''
+\item \textbf{Stereotyped}: ``It made assumptions about who I am''  
+\item \textbf{Surveilled}: ``It's analyzing my communication style''
+\end{itemize}
+
+Mitigation strategies include optional transparency modes, easy override commands (``Be more casual''), and clear documentation that the system adapts to communication style.
+
+However, transparency creates tension: explaining ``I inferred you're frustrated from your word choice'' breaks immersion, defeating ZCPI's primary benefit.
+
+\subsubsection{Power Dynamics}
+
+In customer service, ZCPI might perpetuate unhealthy patterns:
+
+\begin{itemize}
+\item Aggressive users receive deferential treatment, reinforcing entitlement
+\item Polite users might not receive sufficient prioritization
+\end{itemize}
+
+Recommendation: Decouple persona (communication style) from service quality (issue priority). An angry user should receive empathetic communication \textit{and} appropriate urgency, but politeness should not disadvantage others.
+
+\subsubsection{Stereotype Risk}
+
+If $$U_1$$ contains markers associated with demographic groups, ZCPI might instantiate stereotyped personas. Safeguard: Explicitly prohibit persona dimensions that vary by protected characteristics. Focus inference on task context and explicit relational cues only.
+
+\subsection{Comparison to Human Social Inference}
+
+Humans also perform instant social calibration, but with advantages ZCPI lacks:
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{p{2.5cm}p{2.3cm}p{2.3cm}}
+\toprule
+\textbf{Capability} & \textbf{Human} & \textbf{ZCPI} \\
+\midrule
+Multimodal cues & Prosody, facial expression, gesture & Text only \\
+Contextual memory & Recognizes repeat interactions & Stateless (unless engineered) \\
+Sarcasm detection & High accuracy via tone & Low (text-only) \\
+Revision fluidity & Seamlessly adjusts & Anchoring bias \\
+Cultural adaptation & Learns from exposure & Requires rule updates \\
+\bottomrule
+\end{tabular}
+\caption{Comparison of human and ZCPI social inference capabilities.}
+\label{tab:comparison}
+\end{table}
+
+Future implementations should incorporate voice prosody, typing dynamics, and emoji patterns.
+
+\subsection{Future Directions}
+
+\subsubsection{Rigorous Empirical Validation}
+
+The most critical next step is systematic evaluation:
+
+\begin{enumerate}
+\item \textbf{Controlled trials} with diverse user populations ($$N > 200$$)
+\item \textbf{Systematic rating protocols} with inter-rater reliability
+\item \textbf{Baseline comparisons} against configuration-based, generic, and adaptive systems
+\item \textbf{Failure mode analysis} with statistical power
+\end{enumerate}
+
+I invite researchers to conduct these studies using the openly available prompts.
+
+\subsubsection{Multimodal Extension}
+
+Integrate additional signal channels:
+\begin{itemize}
+\item Voice: Prosody, speech rate, volume
+\item Text: Typing speed, error corrections, emoji density
+\item Video: Facial expressions, posture (with privacy safeguards)
+\end{itemize}
+
+\subsubsection{Confidence-Aware Inference}
+
+Estimate inference confidence:
+\begin{itemize}
+\item High confidence $$\to$$ immediate instantiation
+\item Low confidence $$\to$$ explicit clarification
+\end{itemize}
+
+\subsubsection{Cross-Cultural Validation}
+
+Develop culture-specific inference rules for Arabic, Mandarin, Hindi, Portuguese, etc. A universal model is likely unattainable.
+
+\subsubsection{Neurodiversity Adaptation}
+
+Detect and adapt to communication styles that deviate from neurotypical norms without pathologizing them.
+
+\section{Conclusion}
+
+I have proposed Zero-Configuration Persona Inference (ZCPI), a framework enabling conversational AI to infer appropriate personas from users' first utterances without explicit configuration. ZCPI addresses the configuration paradox by exploiting the natural front-loading of relational information in human communication.
+
+Preliminary deployment suggests ZCPI is feasible and subjectively effective, though systematic validation remains as future work. I have identified expected failure modes (ambiguity, cultural mismatch, sarcasm detection) and discussed ethical implications (consent, power dynamics, stereotyping).
+
+The core contribution is not empirical proof of effectiveness—that awaits rigorous study—but rather:
+
+\begin{enumerate}
+\item A theoretically grounded framework for zero-shot persona inference
+\item A practical implementation strategy using structured LLM prompting
+\item A publicly available system for community experimentation
+\item A systematic analysis of limitations, constraints, and validation requirements
+\end{enumerate}
+
+I invite the research community to conduct formal empirical studies using the prompts available at:
+
+\url{https://github.com/shigechika-kuri/formless-muse}
+
+By treating the first utterance as a coordination signal rather than mere content, we can create more seamless, engaging AI interactions without sacrificing user agency. Whether ZCPI achieves this goal at scale remains an open empirical question—one I hope this work will inspire others to answer.
+
+\section*{Acknowledgments}
+
+This work was conducted as independent research. I thank users who provided feedback on pilot deployment and colleagues who offered critical commentary. No external funding was received.
+
+\bibliographystyle{plainnat}
+\begin{thebibliography}{10}
+
+\bibitem{brown1987politeness}
+P.~Brown and S.~C. Levinson.
+\newblock \textit{Politeness: Some Universals in Language Usage}.
+\newblock Cambridge University Press, 1987.
+
+\bibitem{clark1996}
+H.~H. Clark.
+\newblock \textit{Using Language}.
+\newblock Cambridge University Press, 1996.
+
+\bibitem{danescu2011}
+C.~Danescu-Niculescu-Mizil and L.~Lee.
+\newblock Chameleons in imagined conversations: A new approach to understanding coordination of linguistic style in dialogs.
+\newblock In \textit{Proceedings of the Workshop on Cognitive Modeling and Computational Linguistics}, 2011.
+
+\bibitem{giles1991}
+H.~Giles, J.~Coupland, and N.~Coupland.
+\newblock Accommodation theory: Communication, context, and consequence.
+\newblock In \textit{Contexts of Accommodation: Developments in Applied Sociolinguistics}, 1991.
+
+\bibitem{keskar2019}
+N.~S. Keskar et al.
+\newblock {CTRL}: A conditional transformer language model for controllable generation.
+\newblock \textit{arXiv preprint arXiv:1909.05858}, 2019.
+
+\bibitem{kuyda2017}
+E.~Kuyda.
+\newblock Replika: An AI companion.
+\newblock \url{https://replika.ai}, 2017.
+
+\bibitem{lake2019}
+B.~M. Lake et al.
+\newblock Human-like systematic generalization through a meta-learning neural network.
+\newblock \textit{Nature}, 2019.
+
+\bibitem{li2016}
+J.~Li et al.
+\newblock A persona-based neural conversation model.
+\newblock In \textit{Proceedings of ACL}, 2016.
+
+\bibitem{salewski2023}
+L.~Salewski et al.
+\newblock In-context impersonation reveals large language models' strengths and biases.
+\newblock \textit{arXiv preprint arXiv:2305.14930}, 2023.
+
+\bibitem{scissors2008}
+L.~E. Scissors, A.~J. Gill, and D.~Gergle.
+\newblock Linguistic mimicry and trust in text-based CMC.
+\newblock In \textit{Proceedings of CSCW}, 2008.
+
+\bibitem{shanahan2023}
+M.~Shanahan, K.~McDonell, and L.~Reynolds.
+\newblock Role play with large language models.
+\newblock \textit{Nature}, 2023.
+
+\bibitem{xu2021}
+A.~Xu et al.
+\newblock Recipes for safety in open-domain chatbots.
+\newblock \textit{arXiv preprint arXiv:2010.07079}, 2021.
+
+\bibitem{zhang2018}
+S.~Zhang et al.
+\newblock Personalizing dialogue agents: I have a dog, do you have pets too?
+\newblock In \textit{Proceedings of ACL}, 2018.
+
+\bibitem{zhou2020}
+M.~Zhou et al.
+\newblock Design and evaluation of a multi-domain chatbot.
+\newblock In \textit{Proceedings of CHI}, 2020.
+
+\end{thebibliography}
+
+\end{document}
