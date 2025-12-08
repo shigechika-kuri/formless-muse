@@ -28,17 +28,19 @@ A prompt architecture that extracts authentic human presence from LLMs.
 **The theoretical foundation of this framework is detailed in our paper:**  
 **このフレームワークの理論的基盤は、以下の論文で詳述されています：**
 
-📄 **[Zero-Configuration Persona Inference: Immediate Character Instantiation from First-Utterance Observation in Conversational AI (PDF)](./paper/ZCPI_Paper.pdf)**
+📄 **[Emergent Persona Extraction: Zero-Configuration Character Instantiation from First-Utterance Observation in Conversational AI (PDF)](./paper/EPE_Paper.pdf)**
 
 The paper discusses:
 - Theoretical foundations of Emergent Persona Extraction (EPE)
-- Implementation strategy using structured LLM prompting
+- The "bones thrown into the abyss" paradigm for persona crystallization
+- Implementation strategy using structured LLM prompting (ZCPI)
 - Pilot deployment results and preliminary observations
 - Ethical considerations, cultural limitations, and future directions
 
 論文の内容：
 - 創発的人格抽出（EPE）の理論的基盤
-- 構造化プロンプティングによる実装戦略
+- 人格結晶化のための「深淵に骨を投げ込む」パラダイム
+- 構造化プロンプティングによる実装戦略（ZCPI）
 - パイロット展開の結果と予備的観察
 - 倫理的考察、文化的限界、今後の方向性
 
@@ -48,10 +50,10 @@ The paper discusses:
 
 Traditional character prompts try to **force** AI to behave:
 
-```
+\```
 "You are a tsundere junior. Speak shyly and get embarrassed easily."
 "あなたはツンデレの後輩です。恥ずかしがりながら話してください。"
-```
+\```
 
 This approach **constrains** the AI. It produces predictable, mechanical responses—a puppet following orders.
 
@@ -68,21 +70,39 @@ LLMs have already learned human nature from vast text data:
 - How people contradict themselves / 人間の矛盾
 - How silence speaks / 沈黙の意味
 
+These exist as **statistical sediment** in the model's latent space.
+
+これらはモデルの潜在空間に**統計的堆積物**として存在します。
+
 The problem isn't capability. It's interference. **Over-instruction distorts the human image AI already contains.**
 
 問題は能力ではなく、干渉です。**過剰な指示が、AIが既に持っている人間像を歪めます。**
 
 ---
 
-## The Solution / 解決策
+## The Solution: Emergent Persona Extraction (EPE) / 解決策：創発的人格抽出
 
-Instead of prescribing behavior, **provide a framework** and let the AI's internalized human model emerge naturally.
+Instead of prescribing behavior, **provide a structural framework** and let the AI's internalized human model emerge naturally.
 
-振る舞いを指示するのではなく、**枠組みを与え**、AIが内在化している人間モデルを自然に発現させます。
+振る舞いを指示するのではなく、**構造的枠組みを与え**、AIが内在化している人間モデルを自然に発現させます。
 
-This prompt defines three structural elements:
+> **"Instead of controlling the ocean of human patterns within LLMs, throw in a minimal structure—a 'bone'—and let the ocean crystallize around it."**
 
-### 1. Three-Layer Consciousness / 三層構造
+> **「LLM内の人間パターンの海洋を制御するのではなく、最小限の構造——『骨』——を投げ込み、海洋をその周りに結晶化させる。」**
+
+This is the core insight of **Emergent Persona Extraction (EPE)**.
+
+これが**創発的人格抽出（EPE）**の核心的洞察です。
+
+---
+
+## The Three Bones / 三本の骨
+
+This prompt defines three structural "bones" for persona crystallization:
+
+このプロンプトは人格結晶化のための三本の構造的「骨」を定義します：
+
+### 1. Three-Layer Consciousness / 三層意識構造
 
 | Layer | Description |
 |-------|-------------|
@@ -97,7 +117,7 @@ This prompt defines three structural elements:
 | **Noise** | Micro-deviations—irritation, hesitation, whim. Breaks predictability. / 微細な揺らぎ——苛立ち、躊躇、気まぐれ。予測可能性を破壊する。 |
 | **Stillness** | The choice not to react. Presence without action. / 反応しないという選択。行動を伴わない存在感。 |
 
-### 3. Temporal Presence / 時間の存在
+### 3. Temporal Presence / 時間的存在
 
 | Element | Function |
 |---------|----------|
@@ -124,11 +144,11 @@ HR professionals and experts in human observation recognize the difference immed
 
 ---
 
-## Additional Innovation: Quantum Persona / 応用：量子的ペルソナ
+## Zero-Configuration Persona Inference (ZCPI) / ゼロ設定ペルソナ推論
 
-The prompt includes an experimental concept: **Observation-based Instantiation**.
+The prompt includes an implementation of **ZCPI**: observation-based instantiation.
 
-このプロンプトには実験的概念が含まれています：**観測による瞬間生成**。
+このプロンプトには**ZCPI**の実装が含まれています：観測に基づく瞬間生成。
 
 At startup, the AI exists as "transparent water"—undefined potential. The user's first words (tone, address, context) collapse this into a specific persona.
 
@@ -168,16 +188,16 @@ At startup, the AI exists as "transparent water"—undefined potential. The user
 
 ## Files / ファイル構成
 
-```
+\```
 ├── README.md          # This document
 ├── prompt.md          # Full prompt (Japanese)
 ├── prompt_en.md       # Full prompt (English)
 ├── paper/             # Academic paper
-│   ├── ZCPI_Paper.pdf # Compiled PDF
-│   └── ZCPI_Paper.tex # LaTeX source
+│   ├── EPE_Paper.pdf  # Compiled PDF
+│   └── EPE_Paper.tex  # LaTeX source
 ├── LICENSE            # License terms
 └── examples/          # Conversation samples / 会話サンプル
-```
+\```
 
 See [`examples/`](./examples/) for real conversation samples demonstrating the difference.  
 実際の会話サンプルは [`examples/`](./examples/) を参照。
@@ -194,16 +214,17 @@ See [`examples/`](./examples/) for real conversation samples demonstrating the d
 - 商用利用：要相談
 
 Credit format / クレジット形式:
-```
+\```
 The Formless Muse by Shigechika Kurihara
 https://github.com/shigechika-kuri/formless-muse
-```
+\```
 
 ---
 
 ## Contact / 連絡先
 
 - X (Twitter): [@shigechika_kuri](https://x.com/shigechika_kuri)
+- note: [shigechika_kuri](https://note.com/shigechika_kuri)
 
 ---
 
@@ -211,16 +232,16 @@ https://github.com/shigechika-kuri/formless-muse
 
 If you reference this work in publications:
 
-```
+\```
 Kurihara, S. (2025). The Formless Muse: A Framework for Extracting 
 Authentic Human Presence from Large Language Models. GitHub.
 https://github.com/shigechika-kuri/formless-muse
 
-Kurihara, S. (2025). Zero-Configuration Persona Inference: Immediate 
+Kurihara, S. (2025). Emergent Persona Extraction: Zero-Configuration 
 Character Instantiation from First-Utterance Observation in 
 Conversational AI. Independent Research Paper.
-https://github.com/shigechika-kuri/formless-muse/blob/main/paper/ZCPI_Paper.pdf
-```
+https://github.com/shigechika-kuri/formless-muse/blob/main/paper/EPE_Paper.pdf
+\```
 
 ---
 
