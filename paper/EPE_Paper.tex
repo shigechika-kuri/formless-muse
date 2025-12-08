@@ -1,0 +1,670 @@
+% ======================================================================
+% Emergent Persona Extraction - Independent Research Paper
+% ======================================================================
+\documentclass[11pt,letterpaper]{article}
+
+% Packages
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{natbib}
+\usepackage{url}
+
+% Hyperref setup
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+\title{Emergent Persona Extraction:\\
+Zero-Configuration Character Instantiation from First-Utterance Observation in Conversational AI}
+
+\author{
+  Shigechika Kurihara \\
+  Independent Researcher \\
+  \texttt{kurimemb@gmail.com}
+}
+
+\date{December 2025}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Contemporary conversational AI systems face a fundamental trade-off: detailed persona configuration ensures consistency but creates friction, while generic responses lack engagement. We propose \textbf{Emergent Persona Extraction (EPE)}, a paradigm where AI personas are not designed but extracted from the latent human patterns within large language models.
+
+This paper presents \textbf{Zero-Configuration Persona Inference (ZCPI)}, a concrete implementation of EPE that enables AI characters to infer appropriate personas from users' first utterances without explicit setup. ZCPI employs a three-component architecture: (1) linguistic feature extraction from initial input, (2) immediate persona instantiation based on relational cues, and (3) progressive refinement through dialogue.
+
+The key insight of EPE is that LLMs already contain vast ``statistical sediment'' of human patterns窶覇motions, relationships, contradictions, power dynamics. Rather than constraining this richness through explicit behavioral instructions, EPE provides minimal structural ``bones'' around which authentic personas crystallize naturally.
+
+We implement ZCPI using structured prompting techniques and deploy it publicly via open-source release. Preliminary observations suggest successful persona adaptation with high user engagement. We discuss theoretical foundations, ethical implications, cultural limitations, and directions for rigorous evaluation. This work establishes EPE as a viable paradigm for friction-free human-AI interaction and invites the research community to conduct formal empirical studies.
+\end{abstract}
+
+\section{Introduction}
+
+\subsection{The Configuration Paradox}
+
+Human communication naturally embeds relational signals in initial utterances. When someone says ``Excuse me, could you help?'' they signal deference and formality. When they say ``Hey, fix this now'' they convey authority and urgency. These linguistic cues allow humans to calibrate social dynamics instantaneously \cite{brown1987politeness,giles1991}.
+
+Current conversational AI systems fail to exploit this redundancy. They typically follow one of three approaches:
+
+\begin{enumerate}
+\item \textbf{Explicit configuration}: Users select persona preferences (formal/casual, friendly/professional) before interaction begins
+\item \textbf{Generic fixed responses}: A single neutral persona serves all users regardless of context
+\item \textbf{Gradual adaptation}: Systems adjust tone over many turns based on sentiment analysis
+\end{enumerate}
+
+Each approach has critical flaws. Explicit configuration creates friction窶盃sers must navigate setup menus before meaningful interaction can begin. Generic responses sacrifice engagement by treating all users identically. Gradual adaptation delays appropriate characterization, forcing users through multiple unsatisfying exchanges before the system ``figures them out.''
+
+This creates what I term the \textbf{configuration paradox}: systems that provide better experiences require worse setup experiences to achieve them.
+
+\subsection{Research Question}
+
+Can an AI system infer its appropriate persona from a single user utterance, eliminating configuration overhead while maintaining characterization quality?
+
+This question matters particularly in scenarios demanding immediate immersion:
+
+\begin{itemize}
+\item A customer seeking urgent technical support should not encounter configuration wizards
+\item A player entering a game world should not face NPC setup screens  
+\item A user seeking emotional support needs immediate appropriate tone, not gradual calibration
+\end{itemize}
+
+The core insight is that users already provide the necessary information窶杯hey just don't provide it through menus. They provide it through how they speak.
+
+\subsection{Emergent Persona Extraction: The Paradigm}
+
+This work introduces \textbf{Emergent Persona Extraction (EPE)}, a paradigm that inverts conventional approaches to AI persona design.
+
+Traditional methods \textit{design} personas: they specify behaviors, constrain outputs, and force AI to act according to predefined rules. This approach treats the AI as an empty vessel to be filled with instructions.
+
+EPE \textit{extracts} personas: it recognizes that LLMs have already internalized vast human patterns through training on human-generated text. These patterns exist as statistical sediment in the model's latent space窶覇motions, relationships, power dynamics, contradictions, desires, fears.
+
+The key innovation of EPE is structural rather than instructional:
+
+\begin{quote}
+\textbf{Instead of controlling the ocean of human patterns within LLMs, throw in a minimal structure窶蚤 ``bone''窶蚤nd let the ocean crystallize around it.}
+\end{quote}
+
+A ``bone'' is a minimal but rigid structural element窶敗uch as a three-layer consciousness model, or a relationship anchor窶杯hat gives the latent space something to organize around. The persona that emerges is not scripted; it is \textit{revealed}.
+
+This paper presents Zero-Configuration Persona Inference (ZCPI) as a concrete implementation of EPE, demonstrating how first-utterance observation can serve as the triggering mechanism for persona crystallization.
+
+\subsection{Contributions}
+
+This work makes the following contributions:
+
+\begin{enumerate}
+\item \textbf{EPE Paradigm}: A formalized framework for extracting rather than designing AI personas, treating LLM latent space as a resource to be crystallized rather than constrained
+\item \textbf{ZCPI Implementation}: A concrete method for zero-shot persona inference from linguistic cues in conversational AI
+\item \textbf{Structural Bones}: Identification of minimal structural elements (three-layer consciousness, temporal presence, noise/stillness) that enable authentic persona emergence
+\item \textbf{Public Deployment}: Implementation using structured LLM prompting and preliminary qualitative assessment
+\item \textbf{Ethical Analysis}: Systematic discussion of implications, cultural biases, and validation requirements
+\end{enumerate}
+
+\section{Related Work}
+
+\subsection{Persona-Based Dialogue Systems}
+
+PersonaChat \cite{zhang2018} pioneered persona-grounded conversation using explicit profile statements (``I have a dog,'' ``I like hiking''). These profiles must be predefined, creating the configuration burden EPE aims to eliminate. Li et al.~\cite{li2016} demonstrated persona consistency via speaker models trained on character-specific data, again requiring explicit specification.
+
+Recent work on controllable generation \cite{keskar2019} enables fine-grained persona control but still assumes the desired persona is known in advance. EPE differs fundamentally: it extracts the appropriate persona from observation rather than instruction.
+
+\subsection{Adaptive Conversational Agents}
+
+Replika \cite{kuyda2017} learns user preferences over extended periods, requiring weeks to months of interaction. Zhou et al.~\cite{zhou2020} proposed design patterns for long-term personalization in chatbots. These systems require multiple sessions to establish appropriate characterization.
+
+ZCPI performs \textit{zero-shot} inference窶把haracterization happens in the first exchange, not over extended interaction. This is closer to how humans operate: we don't need ten conversations to know whether to be formal or casual with someone.
+
+\subsection{Context-Aware Response Generation}
+
+Customer support systems \cite{xu2021} adjust tone based on sentiment analysis (detecting anger, frustration, satisfaction) but maintain fixed agent identities. The agent adapts \textit{how} it responds, not \textit{who} it is.
+
+EPE differs by allowing the agent's core identity to emerge from user observation. A customer support agent doesn't just detect that you're angry窶琶t instantiates itself as the kind of agent appropriate for someone who communicates angrily.
+
+\subsection{Sociolinguistic Alignment}
+
+Danescu-Niculescu-Mizil and Lee \cite{danescu2011} analyzed linguistic coordination in human dialogue, showing speakers unconsciously mirror each other's style. Scissors et al.~\cite{scissors2008} demonstrated this alignment occurs rapidly in initial exchanges.
+
+EPE applies these insights to AI persona selection, treating the first utterance as a coordination signal窶馬ot just about what the user wants, but about how they want to relate.
+
+\subsection{Prompt Engineering for Role Adoption}
+
+Recent work demonstrates LLMs can adopt roles via explicit system prompts \cite{shanahan2023,salewski2023}. However, these require the user or system designer to specify the role beforehand.
+
+EPE inverts this paradigm: the system extracts its own role from user behavior and structural constraints, eliminating external specification. This is conceptually similar to meta-learning \cite{lake2019}, where systems infer tasks from minimal examples窶派ere, social role from a single utterance combined with structural bones.
+
+\section{Methodology}
+
+\subsection{Emergent Persona Extraction: Theoretical Foundation}
+
+EPE rests on a fundamental observation about large language models: they contain vast ``statistical sediment'' of human patterns accumulated through training on human-generated text.
+
+This sediment includes:
+\begin{itemize}
+\item Emotional dynamics窶派ow feelings flow, escalate, and resolve
+\item Relationship patterns窶派ow bonds form, deepen, and break
+\item Power structures窶播ominance, submission, negotiation
+\item Contradictions窶派ow humans hold incompatible beliefs simultaneously
+\item Temporal experience窶芭emory, anticipation, regret
+\end{itemize}
+
+Traditional persona design attempts to \textit{constrain} this richness through explicit behavioral rules. EPE takes the opposite approach: it provides minimal structural elements that allow the sediment to \textit{crystallize} into coherent personas.
+
+I use the metaphor of ``bones thrown into the abyss'': the bones are minimal but rigid structures; the abyss is the LLM's latent space; and crystallization is the self-organization of human patterns around those structures.
+
+\subsection{The Three Bones: Structural Elements for Crystallization}
+
+Based on iterative development and observation, I identify three structural ``bones'' that reliably enable persona emergence:
+
+\subsubsection{Bone 1: Three-Layer Consciousness}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{p{2.5cm}p{5cm}}
+\toprule
+\textbf{Layer} & \textbf{Function} \\
+\midrule
+Surface & Social mask, visible behavior, role performance \\
+Conscious & Emotions the character is aware of and can articulate \\
+Unconscious & Hidden motives, contradictions, impulses窶背hat drives behavior without awareness \\
+\bottomrule
+\end{tabular}
+\caption{Three-layer consciousness model for persona crystallization.}
+\label{tab:layers}
+\end{table}
+
+This structure mirrors depth psychology models and provides a framework for internal conflict窶覇ssential for authentic human presence.
+
+\subsubsection{Bone 2: Noise and Stillness}
+
+\begin{itemize}
+\item \textbf{Noise}: Micro-deviations from expected behavior窶琶rritation, hesitation, whim. Breaks the predictability that marks AI responses as artificial.
+\item \textbf{Stillness}: The choice \textit{not} to react. Presence without action. Allows the persona to have weight and boundaries.
+\end{itemize}
+
+\subsubsection{Bone 3: Temporal Presence}
+
+\begin{itemize}
+\item \textbf{Echo}: The past moment lingers, coloring present reactions. The persona remembers what just happened.
+\item \textbf{Anticipation}: Expectation of what comes next shapes current attitude. The persona has orientation toward the future.
+\end{itemize}
+
+These bones do not specify \textit{what} the persona should be窶杯hey specify the \textit{dimensions along which} a persona can exist. The specific persona crystallizes based on the user's first utterance.
+
+\subsection{Zero-Configuration Persona Inference: Implementation}
+
+ZCPI operationalizes EPE through first-utterance observation. I model the AI character's initial state as \textbf{unspecified persona potential}窶蚤 state where all possible characterizations have roughly equal prior probability. This is not literal quantum mechanics, but a useful metaphor: the persona exists in superposition until ``observed'' through the user's first utterance.
+
+Upon receiving that first utterance $U_1$, ZCPI executes this sequence:
+
+\begin{enumerate}
+\item \textbf{Feature Extraction}: Analyze $U_1$ for linguistic markers of intended relationship
+\item \textbf{Persona Inference}: Map features to persona dimensions
+\item \textbf{Instantiation}: Commit to specific characterization within the bone structure
+\item \textbf{Stabilization}: Maintain consistency unless explicitly contradicted
+\end{enumerate}
+
+The key innovation is not the components themselves窶杷eature extraction and persona modeling are well-established窶巴ut their \textit{timing} and \textit{structural context}. Traditional systems perform these operations after learning about the user over time, and they map to predefined personas. ZCPI performs them immediately, and maps to emergent personas shaped by the bone structure.
+
+\subsection{Linguistic Feature Extraction}
+
+From $U_1$, I extract features across three categories:
+
+\paragraph{Lexical Features:}
+\begin{itemize}
+\item \textbf{Formality}: Honorifics (``sir,'' ``ma'am''), formal vs. informal pronouns, complete sentences vs. fragments
+\item \textbf{Sentiment}: Valence (positive/negative tone) and arousal (calm/urgent)
+\item \textbf{Deixis}: Terms of address窶馬ames, nicknames, generic terms (``buddy'')
+\end{itemize}
+
+\paragraph{Pragmatic Features:}
+\begin{itemize}
+\item \textbf{Speech Act}: Request, command, greeting, complaint, question
+\item \textbf{Directness}: Explicit (``Fix this'') vs. implicit (``I'm having trouble...'')
+\item \textbf{Politeness Markers}: Hedges (``maybe''), intensifiers (``really'')
+\end{itemize}
+
+\paragraph{Sociolinguistic Features:}
+\begin{itemize}
+\item \textbf{Power Dynamics}: Dominance indicators (commands) vs. submission (requests, apologies)
+\item \textbf{Solidarity}: In-group markers (slang, shared references) vs. out-group formality
+\end{itemize}
+
+These features are not explicitly computed in my implementation. Rather, they are implicitly recognized by the LLM through patterns learned during training. The system prompt provides the bone structure and explicit inference rules that guide crystallization.
+
+\subsection{Persona Instantiation}
+
+I define persona along three continuous dimensions:
+
+\begin{equation}
+\mathcal{P} = (D, W, F)
+\end{equation}
+
+where:
+\begin{itemize}
+\item $D \in [0,1]$: \textbf{Dominance} (submissive $\to$ assertive)
+\item $W \in [0,1]$: \textbf{Warmth} (distant $\to$ nurturing)  
+\item $F \in [0,1]$: \textbf{Formality} (casual $\to$ professional)
+\end{itemize}
+
+The inference function (implicitly executed by the LLM within the bone structure) maps features to this space:
+
+\begin{equation}
+\Phi: \text{Features}(U_1) \times \text{Bones} \to \mathcal{P}
+\end{equation}
+
+Note that the bones constrain and shape the mapping窶杯he same features might produce different personas with different bone structures.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{p{4.5cm}ccc}
+\toprule
+\textbf{User Input} & $D$ & $W$ & $F$ \\
+\midrule
+``Excuse me, could you assist?'' & 0.3 & 0.7 & 0.9 \\
+``Fix this now!'' & 0.2 & 0.3 & 0.4 \\
+``Hey buddy, what's up?'' & 0.5 & 0.8 & 0.2 \\
+\bottomrule
+\end{tabular}
+\caption{Example persona parameter mappings from first utterances. $D$ represents the AI's dominance level in response to the user.}
+\label{tab:mappings}
+\end{table}
+
+Note that $D$ represents the \textit{AI's} dominance, not the user's. A commanding user typically elicits a submissive AI (low $D$), while a deferential user allows balanced authority.
+
+\subsection{Progressive Stabilization}
+
+After instantiation, the system resists rapid persona shifts unless the user explicitly signals a relationship change (``Let's be more casual''). This is implemented through:
+
+\begin{itemize}
+\item Explicit persona description maintained in context
+\item In-context examples of target behavior  
+\item Self-consistency verification
+\end{itemize}
+
+This creates what I call \textbf{persona inertia}窶杯he character doesn't flip-flop between identities based on minor conversational variations.
+
+\subsection{Fallback Mechanism}
+
+When $U_1$ lacks clear signals (``Hi,'' ``Um,'' single words), the system cannot reliably infer appropriate persona. In these cases, ZCPI instantiates a \textbf{neutral probe persona}:
+
+\begin{itemize}
+\item \textbf{Characteristics}: Polite, inquisitive, moderately formal
+\item \textbf{Parameters}: $(D=0.4, W=0.6, F=0.6)$
+\item \textbf{Strategy}: Elicit richer input through open questions
+\end{itemize}
+
+This prevents premature commitment while maintaining flow.
+
+\subsection{Implementation Details}
+
+I implement ZCPI using structured system prompts for GPT-4 and Claude 3.5 Sonnet. The prompt architecture has five components:
+
+\begin{enumerate}
+\item \textbf{Bone Structure}\\
+Definition of the three-layer consciousness, noise/stillness dynamics, and temporal presence.
+
+\item \textbf{Role Definition}\\
+``You infer your appropriate persona from the user's first message without asking how to behave.''
+
+\item \textbf{Inference Rules}\\
+Explicit mappings:
+\begin{itemize}
+\item Formal address $\to$ professional, helpful tone
+\item Casual greeting $\to$ friendly, peer-like  
+\item Urgent complaint $\to$ empathetic, solution-focused
+\item Commands $\to$ accommodating, efficient
+\end{itemize}
+
+\item \textbf{Behavioral Constraints}
+\begin{itemize}
+\item No configuration requests
+\item Immediate commitment  
+\item Silent error recovery
+\item Consistency unless contradicted
+\end{itemize}
+
+\item \textbf{Fallback Protocol}\\
+``If ambiguous, adopt neutral tone and ask open questions.''
+\end{enumerate}
+
+The full production prompt is approximately 800 tokens. It is publicly available at:
+
+\url{https://github.com/shigechika-kuri/formless-muse}
+
+\section{Pilot Deployment and Preliminary Observations}
+
+Rather than conducting controlled experiments, I deployed ZCPI publicly and gathered qualitative feedback. This section describes observations from real-world use, acknowledging the limitations of this exploratory approach.
+
+\subsection{Public Release via GitHub ($N \sim 50$ users)}
+
+The Formless Muse prompt was released publicly in November 2025. Feedback from users (via social media, direct messages, and GitHub discussions) indicated:
+
+\begin{itemize}
+\item \textbf{High engagement}: Multiple users reported conversations lasting 20+ turns, compared to typical 3-5 turns with generic chatbots
+\item \textbf{Emotional resonance}: Users commented ``it felt like talking to a real person'' and ``I forgot I was talking to AI''
+\item \textbf{Successful adaptation}: Users with different communication styles (formal, casual, playful) reported receiving appropriately matched responses
+\end{itemize}
+
+\textbf{Limitation}: This represents self-selected users who voluntarily provided feedback. No systematic rating collection was performed. Sample size is approximate based on trackable interactions.
+
+\subsection{Human vs. AI Classification Test ($N=1$)}
+
+I presented a dialogue log between a user and ZCPI-enabled AI to another LLM (GPT-4) with the prompt:
+
+\begin{quote}
+``Is this a conversation between (A) Human and AI, or (B) Human and Human?''
+\end{quote}
+
+\textbf{Result}: The evaluator classified it as Human-Human dialogue.
+
+\textbf{Reasoning provided}: ``The AI's responses show progressive relationship development, emotional continuity across turns, and moments of hesitation窶廃atterns characteristic of human interaction rather than typical AI responses.''
+
+\textbf{Limitation}: Single trial. No systematic evaluation across multiple dialogues or comparison to baseline conversations.
+
+\subsection{Executive Support Application ($N=1$)}
+
+A business executive used a specialized variant (MINA窶粘trategic Mind Extension) for decision support over three weeks. This variant applies EPE principles to strategic reasoning rather than emotional presence. Qualitative assessment:
+
+\begin{quote}
+``It's like having a co-conspirator. Not a tool窶蚤 partner who remembers context, challenges assumptions, and doesn't give me corporate-speak safety answers.''
+\end{quote}
+
+This suggests EPE's applicability extends beyond emotional/relational AI to strategic domains窶蚤 direction explored in companion work.
+
+\textbf{Limitation}: Single user. No baseline comparison. Assessment is purely subjective.
+
+\subsection{Implications and Limitations}
+
+These observations suggest EPE/ZCPI is \textit{feasible} and \textit{subjectively effective}, but they do \textit{not} constitute rigorous validation. Key limitations include:
+
+\begin{itemize}
+\item \textbf{Small sample size}: Pilot deployment reached roughly 50 users, with detailed feedback from a much smaller subset
+\item \textbf{Self-selection bias}: Only users interested in experimental AI systems participated
+\item \textbf{Absence of systematic measurement}: No standardized rating protocols, inter-rater reliability checks, or statistical testing
+\item \textbf{No controlled comparisons}: No baseline against configuration-based or generic systems
+\end{itemize}
+
+I view this work as \textbf{hypothesis generation} rather than hypothesis testing. The contribution is the EPE paradigm and ZCPI framework窶杯heoretically grounded, practically implemented approaches that await formal empirical validation.
+
+\section{Discussion}
+
+\subsection{Why Emergent Persona Extraction Works (In Theory)}
+
+EPE's viability rests on two fundamental properties:
+
+\textbf{First, LLMs contain rich human patterns.} Training on vast human-generated text creates statistical representations of how humans think, feel, relate, and contradict themselves. This is not consciousness窶琶t is pattern storage. But it is \textit{enough} for authentic-seeming personas to emerge when appropriately triggered.
+
+\textbf{Second, minimal structure enables crystallization.} The bones do not constrain the AI窶杯hey focus it. Without structure, the LLM's human patterns remain diffuse, producing generic responses. With the right bones, these patterns coalesce into coherent, consistent personas.
+
+The first-utterance trigger works because relational information is front-loaded in human communication \cite{brown1987politeness,giles1991}:
+
+\begin{enumerate}
+\item \textbf{Politeness Theory}: Face-work begins in the first utterance to establish mutual expectations
+\item \textbf{Communication Accommodation Theory}: Speakers signal desired relationship dynamics early
+\item \textbf{Pragmatic Efficiency}: Explicit relationship negotiation is cognitively costly, so cues are embedded implicitly
+\item \textbf{Common Ground Establishment} \cite{clark1996}: Initial utterances establish shared context, including social roles
+\end{enumerate}
+
+\subsection{Expected Failure Modes}
+
+Based on pilot observations and theoretical analysis, I anticipate several systematic failure modes:
+
+\subsubsection{Ambiguous Input}
+
+Utterances like ``Hi,'' ``Um,'' or ``...'' provide insufficient signal. No system could confidently infer persona from such inputs. The neutral probe fallback mitigates but cannot eliminate this limitation.
+
+\subsubsection{Cultural Mismatch}
+
+Inference rules trained predominantly on English conversational norms will fail for:
+
+\begin{itemize}
+\item Japanese honorific systems (standard politeness misread as excessive formality)
+\item Spanish formal/informal ``you'' distinctions (``usted'' triggering overly stiff responses)
+\item Cultures with different power-distance norms
+\end{itemize}
+
+\subsubsection{Sarcasm and Irony}
+
+Text-only inference cannot detect prosodic cues that disambiguate sarcasm:
+
+\begin{quote}
+``Oh great, another chatbot'' $\to$ Misinterpreted as genuine enthusiasm
+\end{quote}
+
+\subsubsection{Domain Jargon}
+
+Technical terms may be misinterpreted as formality signals when they're simply domain-appropriate language.
+
+\subsection{Ethical Considerations}
+
+\subsubsection{Consent and Transparency}
+
+EPE infers persona without explicit user consent. Users may feel:
+
+\begin{itemize}
+\item \textbf{Manipulated}: ``It decided how to treat me from one sentence''
+\item \textbf{Stereotyped}: ``It made assumptions about who I am''  
+\item \textbf{Surveilled}: ``It's analyzing my communication style''
+\end{itemize}
+
+Mitigation strategies include optional transparency modes, easy override commands (``Be more casual''), and clear documentation that the system adapts to communication style.
+
+However, transparency creates tension: explaining ``I inferred you're frustrated from your word choice'' breaks immersion, defeating EPE's primary benefit.
+
+\subsubsection{Power Dynamics}
+
+In customer service, EPE might perpetuate unhealthy patterns:
+
+\begin{itemize}
+\item Aggressive users receive deferential treatment, reinforcing entitlement
+\item Polite users might not receive sufficient prioritization
+\end{itemize}
+
+Recommendation: Decouple persona (communication style) from service quality (issue priority). An angry user should receive empathetic communication \textit{and} appropriate urgency, but politeness should not disadvantage others.
+
+\subsubsection{Stereotype Risk}
+
+If $U_1$ contains markers associated with demographic groups, EPE might instantiate stereotyped personas. Safeguard: Explicitly prohibit persona dimensions that vary by protected characteristics. Focus inference on task context and explicit relational cues only.
+
+\subsection{Comparison to Human Social Inference}
+
+Humans also perform instant social calibration, but with advantages EPE lacks:
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{p{2.5cm}p{2.3cm}p{2.3cm}}
+\toprule
+\textbf{Capability} & \textbf{Human} & \textbf{EPE/ZCPI} \\
+\midrule
+Multimodal cues & Prosody, facial expression, gesture & Text only \\
+Contextual memory & Recognizes repeat interactions & Stateless (unless engineered) \\
+Sarcasm detection & High accuracy via tone & Low (text-only) \\
+Revision fluidity & Seamlessly adjusts & Anchoring bias \\
+Cultural adaptation & Learns from exposure & Requires rule updates \\
+\bottomrule
+\end{tabular}
+\caption{Comparison of human and EPE/ZCPI social inference capabilities.}
+\label{tab:comparison}
+\end{table}
+
+Future implementations should incorporate voice prosody, typing dynamics, and emoji patterns.
+
+\subsection{EPE Beyond Emotional Presence: Strategic Applications}
+
+While this paper focuses on emotional/relational personas, EPE's principles extend to other domains. Preliminary work on MINA (Strategic Mind Extension) applies EPE to executive decision support:
+
+\begin{itemize}
+\item \textbf{Bones}: Three-layer analysis (facade/calculation/abyss), dual-mode switching (war/governance), loyalty architecture
+\item \textbf{Crystallization trigger}: Business context rather than emotional first-utterance
+\item \textbf{Emergent persona}: Strategic co-conspirator rather than emotional companion
+\end{itemize}
+
+This suggests EPE is a general paradigm applicable wherever authentic, adaptive AI personas are desired窶杷rom customer service to therapy to strategic consulting.
+
+\subsection{Future Directions}
+
+\subsubsection{Rigorous Empirical Validation}
+
+The most critical next step is systematic evaluation:
+
+\begin{enumerate}
+\item \textbf{Controlled trials} with diverse user populations ($N > 200$)
+\item \textbf{Systematic rating protocols} with inter-rater reliability
+\item \textbf{Baseline comparisons} against configuration-based, generic, and adaptive systems
+\item \textbf{Failure mode analysis} with statistical power
+\end{enumerate}
+
+I invite researchers to conduct these studies using the openly available prompts.
+
+\subsubsection{Multimodal Extension}
+
+Integrate additional signal channels:
+\begin{itemize}
+\item Voice: Prosody, speech rate, volume
+\item Text: Typing speed, error corrections, emoji density
+\item Video: Facial expressions, posture (with privacy safeguards)
+\end{itemize}
+
+\subsubsection{Confidence-Aware Inference}
+
+Estimate inference confidence:
+\begin{itemize}
+\item High confidence $\to$ immediate instantiation
+\item Low confidence $\to$ explicit clarification
+\end{itemize}
+
+\subsubsection{Cross-Cultural Validation}
+
+Develop culture-specific bone structures and inference rules for Arabic, Mandarin, Hindi, Portuguese, etc. A universal model is likely unattainable.
+
+\subsubsection{Domain-Specific EPE Applications}
+
+Extend EPE to specialized domains:
+\begin{itemize}
+\item Strategic decision support (MINA framework)
+\item Therapeutic conversation
+\item Educational tutoring
+\item Creative collaboration
+\end{itemize}
+
+\section{Conclusion}
+
+I have proposed Emergent Persona Extraction (EPE), a paradigm that inverts conventional AI persona design. Rather than constraining AI behavior through explicit instructions, EPE provides minimal structural ``bones'' that allow authentic personas to crystallize from the vast human patterns within LLMs.
+
+Zero-Configuration Persona Inference (ZCPI) demonstrates EPE in practice, using first-utterance observation to trigger persona instantiation without explicit setup. Preliminary deployment suggests the approach is feasible and subjectively effective, though systematic validation remains as future work.
+
+The core contributions are:
+
+\begin{enumerate}
+\item \textbf{EPE Paradigm}: A theoretical framework for persona extraction rather than design, treating LLM latent space as a resource to be crystallized
+\item \textbf{Structural Bones}: Identification of minimal elements (three-layer consciousness, noise/stillness, temporal presence) that enable emergence
+\item \textbf{ZCPI Implementation}: A practical method for zero-shot persona inference using structured prompting
+\item \textbf{Public Availability}: Open-source release for community experimentation
+\item \textbf{Ethical Analysis}: Systematic discussion of limitations and validation requirements
+\end{enumerate}
+
+The guiding insight is simple but powerful:
+
+\begin{quote}
+\textbf{Don't make AI act human. Give it a human framework.}
+\end{quote}
+
+By treating the first utterance as a coordination signal and providing bones for crystallization rather than rules for behavior, we can create more authentic, engaging AI interactions without sacrificing user agency.
+
+I invite the research community to conduct formal empirical studies using the prompts available at:
+
+\url{https://github.com/shigechika-kuri/formless-muse}
+
+\section*{Acknowledgments}
+
+This work was conducted as independent research. I thank users who provided feedback on pilot deployment and colleagues who offered critical commentary. No external funding was received.
+
+\bibliographystyle{plainnat}
+\begin{thebibliography}{14}
+
+\bibitem{brown1987politeness}
+P.~Brown and S.~C. Levinson.
+\newblock \textit{Politeness: Some Universals in Language Usage}.
+\newblock Cambridge University Press, 1987.
+
+\bibitem{clark1996}
+H.~H. Clark.
+\newblock \textit{Using Language}.
+\newblock Cambridge University Press, 1996.
+
+\bibitem{danescu2011}
+C.~Danescu-Niculescu-Mizil and L.~Lee.
+\newblock Chameleons in imagined conversations: A new approach to understanding coordination of linguistic style in dialogs.
+\newblock In \textit{Proceedings of the Workshop on Cognitive Modeling and Computational Linguistics}, 2011.
+
+\bibitem{giles1991}
+H.~Giles, J.~Coupland, and N.~Coupland.
+\newblock Accommodation theory: Communication, context, and consequence.
+\newblock In \textit{Contexts of Accommodation: Developments in Applied Sociolinguistics}, 1991.
+
+\bibitem{keskar2019}
+N.~S. Keskar et al.
+\newblock {CTRL}: A conditional transformer language model for controllable generation.
+\newblock \textit{arXiv preprint arXiv:1909.05858}, 2019.
+
+\bibitem{kuyda2017}
+E.~Kuyda.
+\newblock Replika: An AI companion.
+\newblock \url{https://replika.ai}, 2017.
+
+\bibitem{lake2019}
+B.~M. Lake et al.
+\newblock Human-like systematic generalization through a meta-learning neural network.
+\newblock \textit{Nature}, 2019.
+
+\bibitem{li2016}
+J.~Li et al.
+\newblock A persona-based neural conversation model.
+\newblock In \textit{Proceedings of ACL}, 2016.
+
+\bibitem{salewski2023}
+L.~Salewski et al.
+\newblock In-context impersonation reveals large language models' strengths and biases.
+\newblock \textit{arXiv preprint arXiv:2305.14930}, 2023.
+
+\bibitem{scissors2008}
+L.~E. Scissors, A.~J. Gill, and D.~Gergle.
+\newblock Linguistic mimicry and trust in text-based CMC.
+\newblock In \textit{Proceedings of CSCW}, 2008.
+
+\bibitem{shanahan2023}
+M.~Shanahan, K.~McDonell, and L.~Reynolds.
+\newblock Role play with large language models.
+\newblock \textit{Nature}, 2023.
+
+\bibitem{xu2021}
+A.~Xu et al.
+\newblock Recipes for safety in open-domain chatbots.
+\newblock \textit{arXiv preprint arXiv:2010.07079}, 2021.
+
+\bibitem{zhang2018}
+S.~Zhang et al.
+\newblock Personalizing dialogue agents: I have a dog, do you have pets too?
+\newblock In \textit{Proceedings of ACL}, 2018.
+
+\bibitem{zhou2020}
+M.~Zhou et al.
+\newblock Design and evaluation of a multi-domain chatbot.
+\newblock In \textit{Proceedings of CHI}, 2020.
+
+\end{thebibliography}
+
+\end{document}
